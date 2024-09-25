@@ -1,6 +1,22 @@
 name: 刷步数
 
 on:
+##################################################################
+  workflow_dispatch:
+    inputs:
+      ssh:
+        description: '[ssh-actions]改成[ssh],再按[Run workflow]按钮启动,则开启SSH连接配置固件'
+        required: false
+        default: 'ssh-actions'
+      days:
+        description: '清理[X]天之前的Actions空间操作记录(可改)'
+        required: true
+        default: '3'
+      rele:
+        description: '保留[X]个Releases不被删除(可改)'
+        required: true
+        default: '18'
+##################################################################
   #push:
   #  branches: [ main ]
   #pull_request:
@@ -9,7 +25,7 @@ on:
     - cron: '10 2,4,6,8,10,12,13 * * *'
   watch:
     types: started
-  workflow_dispatch:
+  ##workflow_dispatch:
 
 jobs:
   build:
