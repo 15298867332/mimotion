@@ -1,0 +1,55 @@
+name: Delete All Workflows
+on:
+  workflow_call:
+    workflows: ["Delete All Workflows"]
+ 
+jobs:
+  delete-workflows:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+        with:
+          ref: main
+ 
+      - name: List Workflows
+        id: list_workflows
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const fs = require('fs');
+            const workflowDir = '.github/workflows';
+            // List all workflow files
+            const workflowFiles = fs.readdirSync(workflowDir);
+ 
+            for (const file of workflowFiles) {
+              const filePath = workflowDir + '/' + file;
+              console.log(`Deleting workflow: ${filePath}`);
+              fs.unlinkSync(filePath);
+            }
+ 
+            // Commit and push changes
+            const commitMessage = 'Delete all workflows';
+            const github = require('@actions/github');
+            const octokit = github.getOctokit(process.env.GITHUB_TOKEN);
+            const ref = github.context.sha;
+ 
+            octokit.rest.git.createCommit({
+              owner: github.context.repo.owner,
+              repo: github.context.repo.repo,
+              message: commitMessage,
+              tree: ref,
+              parents: [ref]
+            }).then(({data: commit}) => {
+              return octokit.rest.git.updateRef({
+                owner: github.context.repo.owner,
+                repo: github.context.repo.repo,
+                ref: 'heads/main',
+                sha: commit.sha,
+              });
+            }).then(() => {
+              console.log('Workflows deleted successfully');
+            }).catch(error => {
+              console.error('Error deleting workflows:', error);
+              process.exit(1);
+            });
